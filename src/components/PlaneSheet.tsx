@@ -23,7 +23,7 @@ export default function PlaneSheet() {
 
       setLoading(true);
 
-      const response = await fetch(`http://localhost:8080/api/jet_photos?reg=${registration}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/jet_photos?reg=${registration}`);
 
       if (!response.ok) {
         planeSheet.setPhotos([]);

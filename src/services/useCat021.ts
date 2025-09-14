@@ -47,7 +47,7 @@ const useCat021 = create<Cat021State>()((set, get) => ({
         const [lon, lat] = aircraft.coordinates;
 
         if (lat < minLat || lat > maxLat || lon < minLon || lon > maxLon) {
-          console.log('[Cat021 Client] Dropping aircraft outside bbox:', aircraft.icaoAddress);
+          // console.log('[Cat021 Client] Dropping aircraft outside bbox:', aircraft.icaoAddress);
           return state;
         }
       }
@@ -85,7 +85,7 @@ const useCat021 = create<Cat021State>()((set, get) => ({
       return;
     }
 
-    const cat021Ws = new WebSocketClient<any, any>('ws://localhost:8080/ws/cat021-track', {
+    const cat021Ws = new WebSocketClient<any, any>(`wss://${import.meta.env.VITE_APP_DOMAIN}/ws/cat021-track`, {
       onOpen: onServiceConnected,
       onMessage: onMessageReceived,
       onError: onServiceError,
