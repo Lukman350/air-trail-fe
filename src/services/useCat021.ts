@@ -5,10 +5,11 @@ import { create } from 'zustand';
 
 interface Cat021State {
   aircrafts: Cat021[] | null;
-  ws: WebSocketClient<any, Cat021> | null;
+  ws: WebSocketClient<BBox, Cat021> | null;
   add: (aircraft: Cat021) => void;
   remove: (index: string) => void;
   connect: () => void;
+  disconnect: () => void;
   getBBox: () => BBox | null;
 }
 
@@ -85,7 +86,7 @@ const useCat021 = create<Cat021State>()((set, get) => ({
       return;
     }
 
-    const cat021Ws = new WebSocketClient<any, any>(`wss://${import.meta.env.VITE_APP_DOMAIN}/ws/cat021-track`, {
+    const cat021Ws = new WebSocketClient<BBox, Cat021>(`wss://${import.meta.env.VITE_APP_DOMAIN}/ws/cat021-track`, {
       onOpen: onServiceConnected,
       onMessage: onMessageReceived,
       onError: onServiceError,
@@ -96,6 +97,13 @@ const useCat021 = create<Cat021State>()((set, get) => ({
     });
 
     set({ ws: cat021Ws });
+  },
+  disconnect: () => {
+    const ws = get().ws;
+    if (ws) {
+      ws.close();
+      set({ ws: null });
+    }
   },
   getBBox: () => {
     const { bbox } = useBBox.getState();
@@ -108,7 +116,7 @@ const onServiceConnected = () => {
   console.log('[Cat021 Service] Connected successfully');
 };
 
-const onMessageReceived = (data: any) => {
+const onMessageReceived = (data: Cat021) => {
   const { add, remove } = useCat021.getState();
 
   if ('delete' in data && data.delete === true) {
@@ -118,7 +126,7 @@ const onMessageReceived = (data: any) => {
     return;
   }
 
-  add(data as Cat021);
+  add(data);
 };
 
 const onServiceError = (event: Event) => {

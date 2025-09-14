@@ -1,6 +1,6 @@
 export interface WebSocketEvents<T> {
   onOpen?: (event: Event) => void;
-  onMessage?: (data: T, event: MessageEvent) => void;
+  onMessage?: (data: T) => void;
   onClose?: (event: CloseEvent) => void;
   onError?: (event: Event) => void;
 }
@@ -39,7 +39,7 @@ export class WebSocketClient<TSend = unknown, TReceive = unknown> {
     };
 
     this.socket.onmessage = (event) => {
-      let data: any = event.data;
+      let data = event.data;
       if (this.options.parseJson) {
         try {
           data = JSON.parse(event.data);
@@ -47,7 +47,7 @@ export class WebSocketClient<TSend = unknown, TReceive = unknown> {
           // fallback to raw string
         }
       }
-      this.options.onMessage?.(data as TReceive, event);
+      this.options.onMessage?.(data as TReceive);
     };
 
     this.socket.onclose = (event) => {

@@ -14,7 +14,7 @@ export default function PlaneMarker({ aircraft, size = 1 }: { aircraft: Cat021; 
       size,
       rotate: aircraft.heading ?? 0,
     }).then(setIcon);
-  }, [aircraft.aircraftType, aircraft.heading, size]);
+  }, [aircraft.aircraftType, aircraft.heading, aircraft.icaoAddress, size]);
 
   if (!icon) return null; // wait for icon to load
 

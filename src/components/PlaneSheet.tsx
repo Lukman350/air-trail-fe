@@ -39,6 +39,7 @@ export default function PlaneSheet() {
     };
 
     if (planeSheet.plane != null && planeSheet.plane.registration) fetchJetPhotos(planeSheet.plane.registration || '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [planeSheet.plane]);
 
   return (

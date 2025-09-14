@@ -11,12 +11,12 @@ export interface JetPhotoImage {
   Link: string;
   Thumbnail: string;
   DateTaken: string;
-  DateUploaded: String;
+  DateUploaded: string;
   Location: string;
   Photographer: string;
   Aircraft: string;
-  Serial: String;
-  Airline: String;
+  Serial: string;
+  Airline: string;
 }
 
 interface PlaneSheetState {

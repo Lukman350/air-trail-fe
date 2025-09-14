@@ -14,6 +14,7 @@ export default function BBox() {
       minLat: b.getSouth(),
       maxLat: b.getWest(),
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function BBox() {
     return () => {
       map.off('moveend', onMoveEnd);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map]);
 
   return null;

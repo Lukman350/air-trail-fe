@@ -9,6 +9,7 @@ import { Layers } from 'lucide-react';
 import PlaneSheet from './components/PlaneSheet';
 import BBox from './components/BBox';
 import useBBox from './hooks/useBBox';
+import ZoomLevel from './components/ZoomLevel';
 
 function App() {
   const cat021 = useCat021();
@@ -18,12 +19,14 @@ function App() {
     if (cat021.ws === null) {
       cat021.connect();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (cat021.ws !== null) {
-      cat021.ws.send(bbox);
+      if (bbox !== null) cat021.ws.send(bbox);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bbox]);
 
   const aircrafts = useMemo(() => {
@@ -53,6 +56,7 @@ function App() {
       ]}
     >
       <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <ZoomLevel />
       <BBox />
       {aircrafts?.map((aircraft) => (
         <PlaneMarker key={aircraft.icaoAddress} aircraft={aircraft} size={40} />
