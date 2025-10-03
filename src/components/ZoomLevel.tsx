@@ -15,7 +15,7 @@ function ZoomLevel() {
 
   return (
     <div className="absolute right-4 top-4 z-[1000] flex gap-4">
-      <div className="bg-white px-3 py-2 rounded-lg shadow-lg">Zoom Level: {zoom}</div>
+      <div className="bg-white px-2 py-1 md:px-3 md:py-2 rounded-lg shadow-lg">Zoom Level: {zoom}</div>
     </div>
   );
 }

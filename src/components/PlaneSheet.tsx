@@ -19,11 +19,11 @@ export default function PlaneSheet() {
     planeSheet.setPhotos([]);
 
     const fetchJetPhotos = async (reg: string) => {
-      const registration = reg.length > 2 ? reg.slice(0, 2) + '-' + reg.slice(2) : '';
+      // const registration = reg.length > 2 ? reg.slice(0, 2) + '-' + reg.slice(2) : '';
 
       setLoading(true);
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/jet_photos?reg=${registration}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/jet_photos?reg=${reg}`);
 
       if (!response.ok) {
         planeSheet.setPhotos([]);

@@ -33,7 +33,10 @@ export default function PlaneMarker({ aircraft, size = 1 }: { aircraft: Cat021; 
       }}
     >
       <Tooltip key={aircraft.icaoAddress} direction="top" offset={[0, -size / 2]} opacity={1} interactive className="rounded">
-        {aircraft.callsign ?? aircraft.registration ?? 'N/A'}
+        <div className="flex flex-col justify-center items-center">
+          <strong>{aircraft.callsign ?? aircraft.registration ?? 'N/A'}</strong>
+          <p>Last Received: {aircraft?.updateTimestamp ? new Date(aircraft?.updateTimestamp).toUTCString() : ''}</p>
+        </div>
       </Tooltip>
     </Marker>
   );

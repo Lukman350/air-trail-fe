@@ -44,7 +44,7 @@ function App() {
       minZoom={2}
       zoom={5.15}
       scrollWheelZoom={true}
-      className="min-h-screen w-full"
+      className="h-screen w-full"
       fadeAnimation
       zoomSnap={0.25}
       zoomControl={false}
@@ -55,7 +55,11 @@ function App() {
         [90, 180],
       ]}
     >
-      <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        zIndex={0}
+      />
       <ZoomLevel />
       <BBox />
       {aircrafts?.map((aircraft) => (
@@ -63,8 +67,11 @@ function App() {
       ))}
       <ButtonLocate />
       <div className="absolute left-4 bottom-6 shadow-lg z-[1000]">
-        <div className="flex w-14 flex-col gap-2 rounded bg-[var(--color-background)]">
-          <Button variant="ghost">
+        <div className="flex md:w-14 flex-col gap-2 rounded bg-background">
+          <Button variant="ghost" className="cursor-pointer">
+            <Layers />
+          </Button>
+          <Button variant="ghost" className="cursor-pointer">
             <Layers />
           </Button>
         </div>
