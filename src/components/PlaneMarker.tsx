@@ -1,4 +1,4 @@
-import { Marker, Tooltip, useMap } from 'react-leaflet';
+import { Marker, useMap } from 'react-leaflet';
 import { createSvgIconFromICAO } from '@/utils/create_svg';
 import type { Cat021 } from '@/services/useCat021';
 import { useEffect, useState } from 'react';
@@ -10,11 +10,11 @@ export default function PlaneMarker({ aircraft, size = 1 }: { aircraft: Cat021; 
   const [icon, setIcon] = useState<DivIcon>();
 
   useEffect(() => {
-    createSvgIconFromICAO(aircraft.icaoAddress, aircraft.aircraftType ? aircraft.aircraftType.toLowerCase() : '', {
+    createSvgIconFromICAO(aircraft.icaoAddress, aircraft.aircraftType ? aircraft.aircraftType : '', aircraft.callsign, {
       size,
       rotate: aircraft.heading ?? 0,
     }).then(setIcon);
-  }, [aircraft.aircraftType, aircraft.heading, aircraft.icaoAddress, size]);
+  }, [aircraft.aircraftType, aircraft.callsign, aircraft.heading, aircraft.icaoAddress, size]);
 
   if (!icon) return null; // wait for icon to load
 
@@ -31,13 +31,6 @@ export default function PlaneMarker({ aircraft, size = 1 }: { aircraft: Cat021; 
           onPlaneClicked(event, aircraft);
         },
       }}
-    >
-      <Tooltip key={aircraft.icaoAddress} direction="top" offset={[0, -size / 2]} opacity={1} interactive className="rounded">
-        <div className="flex flex-col justify-center items-center">
-          <strong>{aircraft.callsign ?? aircraft.registration ?? 'N/A'}</strong>
-          <p>Last Received: {aircraft?.updateTimestamp ? new Date(aircraft?.updateTimestamp).toUTCString() : ''}</p>
-        </div>
-      </Tooltip>
-    </Marker>
+    />
   );
 }

@@ -1,32 +1,42 @@
 import L, { DivIcon } from 'leaflet';
 import { SVG_CACHE } from './contants';
 import defaultPlane from '@/assets/icons/aircraft/default.svg?raw';
+import axiosApi from './axiosApi';
+import { getIcons } from './icons';
 
 /**
  * Dynamically load and create a Leaflet DivIcon from an ICAO SVG file.
  * @param icao ICAO type code (e.g. "a333", "b738")
  * @param opts options for size/rotation
  */
-export async function createSvgIconFromICAO(address: string, icao: string, opts: { size?: number; rotate?: number } = {}): Promise<DivIcon> {
+export async function createSvgIconFromICAO(address: string, icao: string, callsign: string, opts: { size?: number; rotate?: number } = {}): Promise<DivIcon> {
   const size = opts.size ?? 24;
   const rotate = opts.rotate ?? 0;
+  const icon = getIcons(icao);
 
   let svg = !icao ? defaultPlane : SVG_CACHE.get(icao);
 
   if (!svg) {
     try {
-      const response = await fetch(`/assets/icons/aircraft/${icao}.svg`);
-      if (!response.ok) {
+      const response = await axiosApi.get(`/aircraft/${icon.icon}.svg`);
+
+      if (response.status !== 200) {
         console.warn(`[PlaneIcon] Missing SVG for type ${icao}, falling back`);
+        svg = defaultPlane;
+      } else {
+        svg = response.data;
       }
-      svg = await response.text();
-      SVG_CACHE.set(icao, svg);
+
+      SVG_CACHE.set(icao, svg || defaultPlane);
     } catch (err) {
       console.error(`[PlaneIcon] Error fetching SVG for ${icao}:`, err);
+      svg = defaultPlane;
+      SVG_CACHE.set(icao, svg);
     }
   }
 
   const html = `
+  <div>
     <div style="
       width:${size}px;
       height:${size}px;
@@ -41,6 +51,16 @@ export async function createSvgIconFromICAO(address: string, icao: string, opts:
         .replace(/fill="white"/gi, `fill="#fcd34d"`)
         .replace(/fill="black"/gi, `fill="#000"`)}
     </div>
+    <p style="color: #fcd34d; font-weight: bold; text-shadow:
+    -0.5px -0.5px 0 black,
+     0.5px -0.5px 0 black,
+    -0.5px  0.5px 0 black,
+     0.5px  0.5px 0 black,
+    -0.5px  0px 0 black,
+     0.5px  0px 0 black,
+     0px -0.5px 0 black,
+     0px  0.5px 0 black; text-align: center;">${callsign || 'No Callsign'}</p>
+  </div>
   `;
 
   return L.divIcon({
