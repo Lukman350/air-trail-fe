@@ -29,6 +29,7 @@ export interface Cat021 {
   firName: string;
   fpDep: string;
   fpDest: string;
+  fpRoute: string;
   aircraftType: string;
   registration: string;
   updateTimestamp: Date;
@@ -86,7 +87,7 @@ const useCat021 = create<Cat021State>()((set, get) => ({
       return;
     }
 
-    const cat021Ws = new WebSocketClient<BBox, Cat021>(`wss://${import.meta.env.VITE_APP_DOMAIN}/ws/cat021-track`, {
+    const cat021Ws = new WebSocketClient<BBox, Cat021>(`ws://${import.meta.env.VITE_APP_DOMAIN}/ws/cat021-track`, {
       onOpen: onServiceConnected,
       onMessage: onMessageReceived,
       onError: onServiceError,
