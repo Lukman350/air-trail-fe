@@ -1,4 +1,4 @@
-import usePlaneSheet, { type JetPhotosResponse } from '@/hooks/usePlaneSheet';
+import usePlaneSheet from '@/hooks/usePlaneSheet';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from './ui/sheet';
 import { Table, TableCaption, TableRow, TableBody, TableCell } from './ui/table';
 import { PlaneTakeoff } from 'lucide-react';
@@ -16,35 +16,24 @@ export default function PlaneSheet() {
   };
 
   useEffect(() => {
-    planeSheet.setPhotos([]);
-
-    const fetchJetPhotos = async (reg: string) => {
-      // const registration = reg.length > 2 ? reg.slice(0, 2) + '-' + reg.slice(2) : '';
-
-      setLoading(true);
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/jet_photos?reg=${reg}`);
-
-      if (!response.ok) {
-        planeSheet.setPhotos([]);
-      } else {
-        const body = (await response.json()) as JetPhotosResponse;
-
-        const jetPhotos = body.Images ? body.Images : [];
-
-        planeSheet.setPhotos(jetPhotos);
+    (async () => {
+      if (planeSheet.plane?.registration) {
+        setLoading(true);
+        await planeSheet.fetchJetPhotos(planeSheet.plane.registration);
+        setLoading(false);
       }
+    })();
+  }, [planeSheet.plane?.registration]);
 
-      setLoading(false);
-    };
-
-    if (planeSheet.plane != null && planeSheet.plane.registration) fetchJetPhotos(planeSheet.plane.registration || '');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [planeSheet.plane]);
+  useEffect(() => {
+    if (planeSheet.plane?.callsign) {
+      planeSheet.fetchAftn(planeSheet.plane.callsign);
+    }
+  }, [planeSheet.plane?.callsign]);
 
   return (
     <Sheet open={planeSheet.open} onOpenChange={planeSheet.toggle}>
-      <SheetContent className="w-[400px] sm:w-[540px] h-max absolute top-8 right-8 z-[1000] rounded">
+      <SheetContent className="w-screen md:w-[400px] h-max absolute md:top-8 md:right-8 z-[1000] rounded">
         <SheetHeader>
           <SheetTitle className="scroll-m-20 text-xl font-semibold tracking-tight">{planeSheet.plane?.callsign}</SheetTitle>
           <SheetDescription asChild>
