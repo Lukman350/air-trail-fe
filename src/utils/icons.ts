@@ -1624,6 +1624,9 @@ const getAircraftIcon = (type: string): IAircraftIcon => {
     case 'AT75':
     case 'AT76':
       return aircraftIcons.at7x;
+    case 'P28A':
+    case 'PA28':
+      return aircraftIcons.p28x;
     case 'A10':
     case 'A124':
     case 'A139':
