@@ -46,8 +46,8 @@ export default function PlaneSheet() {
                     planeSheet.photos?.map((image, index) => (
                       <CarouselItem key={index} className="relative h-[200px] m-0 px-2">
                         <div className="relative shadow-lg">
-                          <img src={image.Image} alt={`${planeSheet.plane?.registration}'s Photo`} className="w-full h-full" />
-                          <div className="flex justify-between items-center w-full absolute bottom-2 px-2">
+                          <img src={image.Image} alt={`${planeSheet.plane?.registration}'s Photo`} className="w-full h-[200px] object-cover" />
+                          <div className="flex justify-between items-center w-full absolute bottom-2 px-2 bg-gradient-to-r from-slate-900 to-slate-100/0">
                             <p className="text-white font-light text-xs truncate w-full">&copy; {image.Photographer}</p>
                             <p className="text-white font-light text-xs truncate w-full">{image.Location}</p>
                           </div>
