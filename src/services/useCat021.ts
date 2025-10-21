@@ -1,12 +1,13 @@
 import type { BBox } from '@/hooks/useBBox';
 import useBBox from '@/hooks/useBBox';
+import useClickedPlane from '@/hooks/useClickedPlane';
 import { WebSocketClient } from '@/utils/websocket_client';
 import { create } from 'zustand';
 
 interface Cat021State {
-  aircrafts: Cat021[] | null;
+  aircrafts: Record<string, { cache?: Cat021; current: Cat021 }>;
   ws: WebSocketClient<BBox, Cat021> | null;
-  add: (aircraft: Cat021) => void;
+  updateAircraft: (aircraft: Cat021) => void;
   remove: (index: string) => void;
   connect: () => void;
   disconnect: () => void;
@@ -35,59 +36,98 @@ export interface Cat021 {
   updateTimestamp: Date;
   updateDelete: string;
   coordinates: number[];
+  latitude: number;
+  longitude: number;
 }
 
 const useCat021 = create<Cat021State>()((set, get) => ({
-  aircrafts: null,
+  aircrafts: {},
   ws: null,
-  add: (aircraft) =>
+  updateAircraft: (data) =>
     set((state) => {
-      const { getBBox } = get();
-      const bbox = getBBox();
-      if (bbox) {
-        const { minLat, minLon, maxLat, maxLon } = bbox;
-        const [lon, lat] = aircraft.coordinates;
+      // const { getBBox } = get();
+      // const bbox = getBBox();
+      // if (bbox) {
+      //   const { minLat, minLon, maxLat, maxLon } = bbox;
+      //   const [lon, lat] = aircraft.coordinates;
 
-        if (lat < minLat || lat > maxLat || lon < minLon || lon > maxLon) {
-          // console.log('[Cat021 Client] Dropping aircraft outside bbox:', aircraft.icaoAddress);
-          return state;
-        }
+      //   if (lat < minLat || lat > maxLat || lon < minLon || lon > maxLon) {
+      //     // console.log('[Cat021 Client] Dropping aircraft outside bbox:', aircraft.icaoAddress);
+      //     state.aircraftCache.delete(aircraft.icaoAddress);
+      //     return state;
+      //   }
+      // }
+
+      // if (!state.aircrafts) {
+      //   return { aircrafts: [aircraft] };
+      // }
+
+      // const exists = state.aircrafts.find((a) => a.icaoAddress === aircraft.icaoAddress);
+
+      // // console.log('new', aircraft);
+      // // console.log('old', exists);
+
+      // if (exists) {
+      //   state.aircraftCache.set(exists.icaoAddress, exists);
+
+      //   const prevTime = new Date(exists.updateTimestamp).getTime();
+      //   const newTime = new Date(aircraft.updateTimestamp).getTime();
+
+      //   // only replace if the new one is fresher
+      //   if (newTime > prevTime) {
+      //     return {
+      //       aircrafts: state.aircrafts.map((a) => (a.icaoAddress === aircraft.icaoAddress ? aircraft : a)),
+      //     };
+      //   }
+
+      //   // otherwise ignore stale update
+      //   return state;
+      // }
+
+      // state.aircraftCache.set(aircraft.icaoAddress, aircraft);
+
+      // // not in list → add it
+      // return { aircrafts: [...state.aircrafts, aircraft] };
+
+      const existing = state.aircrafts[data.icaoAddress];
+
+      if (!existing) {
+        // first time — no cache yet
+        return {
+          aircrafts: {
+            ...state.aircrafts,
+            [data.icaoAddress]: { current: data },
+          },
+        };
       }
 
-      if (!state.aircrafts) {
-        return { aircrafts: [aircraft] };
-      }
-
-      const exists = state.aircrafts.find((a) => a.icaoAddress === aircraft.icaoAddress);
-
-      if (exists) {
-        const prevTime = new Date(exists.updateTimestamp).getTime();
-        const newTime = new Date(aircraft.updateTimestamp).getTime();
-
-        // only replace if the new one is fresher
-        if (newTime > prevTime) {
-          return {
-            aircrafts: state.aircrafts.map((a) => (a.icaoAddress === aircraft.icaoAddress ? aircraft : a)),
-          };
-        }
-
-        // otherwise ignore stale update
+      const prev = existing.current;
+      // ignore duplicates or outdated data
+      if (new Date(data.updateTimestamp) <= new Date(prev.updateTimestamp)) {
         return state;
       }
 
-      // not in list → add it
-      return { aircrafts: [...state.aircrafts, aircraft] };
+      return {
+        aircrafts: {
+          ...state.aircrafts,
+          [data.icaoAddress]: { cache: prev, current: data },
+        },
+      };
     }),
   remove: (icaoAddress: string) =>
-    set((state) => ({
-      aircrafts: state.aircrafts ? state.aircrafts.filter((a) => a.icaoAddress !== icaoAddress) : null,
-    })),
+    set((state) => {
+      delete state.aircrafts[icaoAddress];
+
+      return {
+        aircrafts: { ...state.aircrafts },
+      };
+    }),
   connect: () => {
     if (get().ws) {
       return;
     }
 
-    const cat021Ws = new WebSocketClient<BBox, Cat021>(`wss://${import.meta.env.VITE_APP_DOMAIN}/ws/cat021-track`, {
+    const cat021Ws = new WebSocketClient<BBox, Cat021>(`ws://${import.meta.env.VITE_APP_DOMAIN}/ws/cat021-track`, {
       onOpen: onServiceConnected,
       onMessage: onMessageReceived,
       onError: onServiceError,
@@ -113,12 +153,22 @@ const useCat021 = create<Cat021State>()((set, get) => ({
   },
 }));
 
+useCat021.subscribe(({ aircrafts }) => {
+  const { setClickedPlane, plane } = useClickedPlane.getState();
+
+  if (plane) {
+    const latestPlane = aircrafts[plane.icaoAddress];
+
+    if (latestPlane) setClickedPlane(latestPlane.current);
+  }
+});
+
 const onServiceConnected = () => {
   console.log('[Cat021 Service] Connected successfully');
 };
 
 const onMessageReceived = (data: Cat021) => {
-  const { add, remove } = useCat021.getState();
+  const { updateAircraft, remove } = useCat021.getState();
 
   if ('delete' in data && data.delete === true) {
     if (data.icaoAddress) {
@@ -127,7 +177,7 @@ const onMessageReceived = (data: Cat021) => {
     return;
   }
 
-  add(data);
+  updateAircraft(data);
 };
 
 const onServiceError = (event: Event) => {

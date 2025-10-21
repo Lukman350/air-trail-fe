@@ -56,6 +56,8 @@ interface PlaneSheetState {
   photos: JetPhotoImage[] | null;
   aftn: AftnResponse | null;
   toggle: () => void;
+  openSheet: () => void;
+  closeSheet: () => void;
   setPlane: (plane: Cat021) => void;
   setPhotos: (jetPhotos: JetPhotoImage[]) => void;
   setAftn: (aftn: AftnResponse) => void;
@@ -69,6 +71,8 @@ const usePlaneSheet = create<PlaneSheetState>()((set, get) => ({
   photos: [],
   aftn: null,
   toggle: () => set((state) => ({ open: !state.open })),
+  openSheet: () => set(() => ({ open: true })),
+  closeSheet: () => set(() => ({ open: false })),
   setPlane: (plane: Cat021) => set({ plane }),
   setPhotos: (jetPhotos: JetPhotoImage[]) => set({ photos: jetPhotos }),
   setAftn: (aftn: AftnResponse) => set({ aftn: aftn }),

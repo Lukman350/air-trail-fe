@@ -5,9 +5,11 @@ import { PlaneTakeoff } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './ui/carousel';
 import { useEffect, useState } from 'react';
 import { Skeleton } from './ui/skeleton';
+import useClickedPlane from '@/hooks/useClickedPlane';
 
 export default function PlaneSheet() {
   const planeSheet = usePlaneSheet();
+  const { setClickedPlane, plane } = useClickedPlane();
   const [loading, setLoading] = useState<boolean>(false);
 
   const flightLevelToFeet = (flightLevel: number | undefined): number => {
@@ -17,25 +19,32 @@ export default function PlaneSheet() {
 
   useEffect(() => {
     (async () => {
-      if (planeSheet.plane?.registration) {
+      if (plane?.registration) {
         setLoading(true);
-        await planeSheet.fetchJetPhotos(planeSheet.plane.registration);
+        await planeSheet.fetchJetPhotos(plane.registration);
         setLoading(false);
       }
     })();
-  }, [planeSheet.plane?.registration]);
+  }, [plane?.registration]);
 
   useEffect(() => {
-    if (planeSheet.plane?.callsign) {
-      planeSheet.fetchAftn(planeSheet.plane.callsign);
+    if (plane?.callsign) {
+      planeSheet.fetchAftn(plane.callsign);
     }
-  }, [planeSheet.plane?.callsign]);
+  }, [plane?.callsign]);
 
   return (
-    <Sheet open={planeSheet.open} onOpenChange={planeSheet.toggle}>
-      <SheetContent className="w-screen md:w-[400px] h-max absolute md:top-8 md:right-8 z-[1000] rounded">
+    <Sheet
+      open={planeSheet.open}
+      onOpenChange={(open) => {
+        planeSheet.toggle();
+        if (!open) setClickedPlane(undefined);
+      }}
+      modal={false}
+    >
+      <SheetContent className="w-screen md:w-[400px] h-max absolute md:top-8 md:right-8 z-[1000] rounded" onInteractOutside={(e) => e.preventDefault()}>
         <SheetHeader>
-          <SheetTitle className="scroll-m-20 text-xl font-semibold tracking-tight">{planeSheet.plane?.callsign}</SheetTitle>
+          <SheetTitle className="scroll-m-20 text-xl font-semibold tracking-tight">{plane?.callsign}</SheetTitle>
           <SheetDescription asChild>
             <div>
               <Carousel className="w-full relative mt-4">
@@ -46,7 +55,7 @@ export default function PlaneSheet() {
                     planeSheet.photos?.map((image, index) => (
                       <CarouselItem key={index} className="relative h-[200px] m-0 px-2">
                         <div className="relative shadow-lg">
-                          <img src={image.Image} alt={`${planeSheet.plane?.registration}'s Photo`} className="w-full h-[200px] object-cover" />
+                          <img src={image.Image} alt={`${plane?.registration}'s Photo`} className="w-full h-[200px] object-cover" />
                           <div className="flex justify-between items-center w-full absolute bottom-2 px-2 bg-gradient-to-r from-slate-900 to-slate-100/0">
                             <p className="text-white font-light text-xs truncate w-full">&copy; {image.Photographer}</p>
                             <p className="text-white font-light text-xs truncate w-full">{image.Location}</p>
@@ -69,44 +78,44 @@ export default function PlaneSheet() {
                 )}
               </Carousel>
               <div className="my-4 flex justify-between">
-                <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">{planeSheet.plane?.fpDep || 'N/A'}</h2>
+                <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">{plane?.fpDep || 'N/A'}</h2>
                 <PlaneTakeoff className="size-8" />
-                <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">{planeSheet.plane?.fpDest || 'N/A'}</h2>
+                <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">{plane?.fpDest || 'N/A'}</h2>
               </div>
               <Table>
-                <TableCaption>Last Received: {planeSheet.plane?.updateTimestamp ? new Date(planeSheet.plane?.updateTimestamp).toUTCString() : ''}</TableCaption>
+                <TableCaption>Last Received: {plane?.updateTimestamp ? new Date(plane?.updateTimestamp).toUTCString() : ''}</TableCaption>
                 <TableBody className="border-t border-b">
                   <TableRow>
                     <TableCell className="font-medium">Aircraft Type</TableCell>
-                    <TableCell>{planeSheet.plane?.aircraftType || 'N/A'}</TableCell>
+                    <TableCell>{plane?.aircraftType || 'N/A'}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">Aircraft Registration</TableCell>
-                    <TableCell>{planeSheet.plane?.registration || 'N/A'}</TableCell>
+                    <TableCell>{plane?.registration || 'N/A'}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">Ground Speed</TableCell>
-                    <TableCell>{Math.floor(planeSheet.plane?.speed || 0)} kts</TableCell>
+                    <TableCell>{Math.floor(plane?.speed || 0)} kts</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">Heading</TableCell>
-                    <TableCell>{Math.floor(planeSheet.plane?.heading || 0)}°</TableCell>
+                    <TableCell>{Math.floor(plane?.heading || 0)}°</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">Altitude</TableCell>
-                    <TableCell>{flightLevelToFeet(planeSheet.plane?.flightLevel)} ft</TableCell>
+                    <TableCell>{flightLevelToFeet(plane?.flightLevel)} ft</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">Latitude</TableCell>
-                    <TableCell>{planeSheet.plane?.coordinates[1]}</TableCell>
+                    <TableCell>{plane?.coordinates[1]}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">Longitude</TableCell>
-                    <TableCell>{planeSheet.plane?.coordinates[0]}</TableCell>
+                    <TableCell>{plane?.coordinates[0]}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">Data Source</TableCell>
-                    <TableCell>{planeSheet.plane?.asterixType}</TableCell>
+                    <TableCell>{plane?.asterixType}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>

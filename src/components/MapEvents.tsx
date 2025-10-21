@@ -2,7 +2,7 @@ import useBBox from '@/hooks/useBBox';
 import { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
 
-export default function BBox() {
+export default function MapEvents() {
   const { setBbox } = useBBox();
   const map = useMap();
 

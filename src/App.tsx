@@ -5,18 +5,20 @@ import PlaneMarker from '@/components/PlaneMarker';
 import ButtonLocate from '@/components/ButtonLocate';
 import { Button } from '@/components/ui/button';
 import PlaneSheet from '@/components/PlaneSheet';
-import BBox from '@/components/BBox';
 import useBBox from '@/hooks/useBBox';
 import useAirport from '@/services/useAirport';
 import usePanel from '@/hooks/usePanel';
 import Panel from '@/components/Panel';
 import useLayer from '@/hooks/useLayer';
+import useWaypoint from './hooks/useWaypoint';
+import MapEvents from '@/components/MapEvents';
 
 function App() {
   const cat021 = useCat021();
   const bbox = useBBox((state) => state.bbox);
   const layerControl = useLayer();
-  const airport = useAirport();
+  const { airports: airportData, fetchAirport } = useAirport();
+  const { fetchWaypoints } = useWaypoint();
   const { panels, togglePanel } = usePanel();
 
   useEffect(() => {
@@ -25,9 +27,13 @@ function App() {
   }, []);
 
   useEffect(() => {
-    airport.fetchAirport();
+    fetchAirport();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchAirport]);
+
+  useEffect(() => {
+    fetchWaypoints();
+  }, [fetchWaypoints]);
 
   useEffect(() => {
     if (bbox !== null && cat021.ws) cat021.ws?.send(bbox);
@@ -36,13 +42,13 @@ function App() {
   const aircrafts = useMemo(() => {
     if (!cat021.aircrafts || !bbox) return cat021.aircrafts;
 
-    return cat021.aircrafts?.filter((a) => {
-      const [lon, lat] = a.coordinates;
+    return Object.values(cat021.aircrafts).filter(({ current }) => {
+      const [lon, lat] = current.coordinates;
       return lat >= bbox.minLat && lat <= bbox.maxLat && lon >= bbox.minLon && lon <= bbox.maxLon;
     });
   }, [cat021.aircrafts, bbox]);
 
-  const airports = useMemo(() => airport.airports, [airport.airports]);
+  const airports = useMemo(() => airportData, [airportData]);
 
   return (
     <>
@@ -61,6 +67,7 @@ function App() {
           [-90, -180],
           [90, 180],
         ]}
+        doubleClickZoom={false}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -68,8 +75,18 @@ function App() {
           zIndex={0}
         />
         <ScaleControl position="topright" />
-        <BBox />
-        {layerControl.planeLayer && aircrafts?.map((aircraft) => <PlaneMarker key={aircraft.icaoAddress} aircraft={aircraft} size={40} />)}
+        <MapEvents />
+        {layerControl.planeLayer &&
+          Object.values(aircrafts).map(({ current, cache }) => (
+            <PlaneMarker
+              key={current.icaoAddress}
+              aircraft={current}
+              cache={cache}
+              size={40}
+              srcAirport={airports?.find((a) => current.fpDep === a.code)}
+              dstAirport={airports?.find((a) => current.fpDest === a.code)}
+            />
+          ))}
         {layerControl.airportLayer &&
           airports?.map((airport) => (
             <Marker key={airport.id} position={[airport.latitude, airport.longitude]}>
